@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Violence Detection System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #333;
+        }
+        
+        .video-feed img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        
+        .safe {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        #confidence {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Real-time Violence Detection</h1>
+        <div class="video-feed">
+            <img id="video-stream" src="{{ url_for('video_feed') }}" alt="Video Feed">
+        </div>
+        <div id="status" class="status safe">Monitoring...</div>
+        <div id="confidence">Confidence: 0%</div>
+    </div>
+
+    <script>
+        const socket = new WebSocket("ws://localhost:5000");
+
+        socket.onopen = function() {
+            console.log("✅ WebSocket connected!");
+        };
+
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            const statusElement = document.getElementById("status");
+            const confidenceElement = document.getElementById("confidence");
+
+            if (data.violence_detected) {
+                statusElement.textContent = "⚠️ Danger Detected!";
+                statusElement.className = "status danger";
+            } else {
+                statusElement.textContent = "✅ Monitoring...";
+                statusElement.className = "status safe";
+            }
+
+            confidenceElement.textContent = `Confidence: ${data.confidence}%`;
+        };
+
+        socket.onerror = function(error) {
+            console.log("❌ WebSocket error: ", error);
+        };
+
+        socket.onclose = function() {
+            console.log("⚠️ WebSocket closed.");
+        };
+    </script>
+</body>
+
+</html>
